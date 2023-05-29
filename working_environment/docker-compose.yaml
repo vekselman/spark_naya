@@ -1,0 +1,43 @@
+version: '3'
+services:
+    course-hdfs:
+        image: gradiant/hdfs-namenode:2.7.7
+        env_file: hdfs_conf.conf
+    course-hdfs-datanode1:
+        image: gradiant/hdfs-datanode:2.7.7
+        env_file: hdfs_conf.conf
+        links:
+            - "course-hdfs:course-hdfs"
+    course-hdfs-datanode2:
+        image: gradiant/hdfs-datanode:2.7.7
+        env_file: hdfs_conf.conf
+        links:
+            - "course-hdfs:course-hdfs"
+    course-hdfs-datanode3:
+        image: gradiant/hdfs-datanode:2.7.7
+        env_file: hdfs_conf.conf
+        links:
+            - "course-hdfs:course-hdfs"
+    course-kafka:
+        image: johnnypark/kafka-zookeeper:2.6.0
+        environment:
+            - ADVERTISED_HOST=course-kafka
+    kafdrop:
+        image: obsidiandynamics/kafdrop:3.30.0
+        ports:
+            - "9001:9000"
+        environment:
+            - KAFKA_BROKERCONNECT=course-kafka:9092
+        depends_on:
+            - course-kafka
+    hue:
+        image: gethue/hue:20211221-140101
+        volumes:
+            - ./hue.ini:/usr/share/hue/desktop/conf/hue.ini
+        ports:
+            - "8889:8888"
+    dev_env:
+        image: ofrir119/developer_env:spark320_idea
+        ports:
+            - "8888:8888"
+            - "22022:22"
