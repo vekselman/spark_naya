@@ -1,8 +1,7 @@
-from pyspark.sql import SparkSession, Row
+from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 from pyspark.sql import types as T
-from kafka import KafkaProducer, KafkaConsumer
-import threading
+
 
 spark = SparkSession.builder.master("local[*]") \
     .config("spark.driver.memory", "4g") \
@@ -54,6 +53,11 @@ def enriche():
     stream_df = stream_df.join(df, on="car_id") \
         .select([
         "event_id",
+        "event_time",
+        "car_id",
+        "speed",
+        "rpm",
+        "gear",
         "driver_id",
         F.col("car_brand").alias("brand_name"),
         F.col("models.car_model").alias("model_name"),
