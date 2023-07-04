@@ -38,6 +38,10 @@ services:
             - "8889:8888"
     dev_env:
         image: ofrir119/developer_env:spark320_idea
+        volumes:
+            - idea_project:/home/developer/IdeaProjects
         ports:
             - "8888:8888"
             - "22022:22"
+volumes:
+    idea_project:
