@@ -18,8 +18,9 @@ output_topic = "samples-enriched"
 cars_input = "/data/dims/cars"
 models_input = "/data/dims/car_models"
 colors_input = "/data/dims/car_colors"
+checkpoint_location = "/data/dims/checkpoints/enrichment"
 
-DEBUG = True
+DEBUG = False
 
 
 def enriche():
@@ -29,7 +30,6 @@ def enriche():
     df = cars.alias("cars") \
         .join(colors.alias("colors"), on="color_id") \
         .join(models.alias("models"), cars["car_model"] == models["model_id"])
-    df.show(20, False)
 
     schema = T.StructType() \
         .add("event_id", T.StringType()) \
@@ -53,6 +53,7 @@ def enriche():
 
     stream_df = stream_df.join(df, on="car_id") \
         .select([
+        "event_id",
         "driver_id",
         F.col("car_brand").alias("brand_name"),
         F.col("models.car_model").alias("model_name"),
@@ -68,10 +69,13 @@ def enriche():
             .start() \
             .awaitTermination()
     else:
-        stream_df.writeStream \
-            .format("console") \
-            .option("truncate", False) \
-            .outputMode("append") \
+        stream_df.selectExpr("CAST(event_id AS STRING) AS key", "to_json(struct(*)) AS value") \
+            .writeStream \
+            .format("kafka") \
+            .option("kafka.bootstrap.servers", bootstrap_servers) \
+            .option("topic", output_topic) \
+            .option("checkpointLocation", fs + checkpoint_location) \
+            .outputMode("update") \
             .start() \
             .awaitTermination()
 
