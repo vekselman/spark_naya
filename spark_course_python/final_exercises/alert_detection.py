@@ -17,7 +17,7 @@ output_topic = "alert-data"
 
 checkpoint_location = "/data/dims/checkpoints/alert_detection"
 
-DEBUG = True
+DEBUG = False
 
 
 def alert():
@@ -46,6 +46,13 @@ def alert():
             T.StringType()), schema
         ).alias("data")) \
         .select("data.*")
+
+    stream_df = stream_df \
+        .where(
+        (F.col("speed") > 120) |
+        (F.col("gear") != F.col("expected_gear")) |
+        (F.col("rpm") > 6000)
+    )
 
     if DEBUG:
         stream_df.writeStream \
